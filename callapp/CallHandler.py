@@ -1,32 +1,35 @@
 import os
 import pjsua2 as pj2
-import threading
 
-# Configuración de la troncal SIP de Telnyx
+# Telnyx SIP Trunk Configuration
 TELNYX_SIP_SERVER = "sip.telnyx.com"
 TELNYX_USERNAME = "myuser"
-TELNYX_PASSWORD = "mypassw"
+TELNYX_PASSWORD = "mypass"
 
-# Números para las llamadas
-CALLER = "1205"
+# Numbers for calls
+CALLER = "120"
 RECIPIENT = "123"
 
-# Ruta del archivo de audio
+# Audio file path
 AUDIO_FILE = "assets/Days-of-the-week.wav"
 
-# Verificar si el archivo de audio existe
+# Check if the file exists
 if not os.path.isfile(AUDIO_FILE):
-    raise FileNotFoundError(f"El archivo de audio no se encuentra en la ruta especificada: {AUDIO_FILE}")
+    raise FileNotFoundError(
+        f"El archivo de audio no se encuentra en la ruta especificada: {AUDIO_FILE}")
 
 # SIP Call Callback
+
 class MyCallHandler(pj2.Call):
     def __init__(self, account, call_id=-1):
         super().__init__(account, call_id)
         self.audio_player = pj2.AudioMediaPlayer()
+        self.tonegen = None
 
     def onCallState(self, prm):
         call_info = self.getInfo()
-        print(f"Call state: {call_info.stateText}, Last Code: {call_info.lastStatusCode}")
+        print(f"Call state: {call_info.stateText}, Last Code: {
+              call_info.lastStatusCode}")
         if call_info.state == pj2.PJSIP_INV_STATE_CONFIRMED:
             print("Call answered")
             self.play_audio()
@@ -36,18 +39,20 @@ class MyCallHandler(pj2.Call):
 
     def onDtmfDigit(self, prm):
         print(f"DTMF received: {prm.digit}")
+        if prm.digit == '7':
+            self.generate_tone()
 
     def play_audio(self):
-        # Reproducir el archivo de audio
+        # Play audio file
         self.audio_player.createPlayer(AUDIO_FILE)
         call_media = self.getAudioMedia(-1)
         self.audio_player.startTransmit(call_media)
 
     def generate_tone(self):
-        # Enviar un tono DTMF
-        dtmf_param = pj2.CallSendDtmfParam()
-        dtmf_param.digits = "1"  # Enviar el dígito "1" como tono DTMF
-        self.dialDtmf(dtmf_param)
+        # Send a DTMF tone
+        print(f"|*********** generate_tone ***********|")
+        self.dialDtmf('#')
+
 
 # Main Endpoint Setup
 ep = pj2.Endpoint()
@@ -66,7 +71,7 @@ try:
 
     # Create transport
     transport_cfg = pj2.TransportConfig()
-    transport_cfg.port = 5070  # Cambia el puerto a 5070
+    transport_cfg.port = 5070
     ep.transportCreate(pj2.PJSIP_TRANSPORT_UDP, transport_cfg)
 
     # Start library
@@ -100,17 +105,9 @@ try:
 
     # Set the From header with the CALLER number
     sip_uri = f"sip:{RECIPIENT}@{TELNYX_SIP_SERVER}"
-    
+
     call.makeCall(sip_uri, call_param)
     print("**************************|______MAKE CALL______|**************************")
-
-    def check_key_press():
-        while True:
-            if input() == 's':
-                call.generate_tone()
-
-    key_thread = threading.Thread(target=check_key_press)
-    key_thread.start()
 
     input("Press Enter to quit...")
     call.hangup(pj2.CallOpParam())
