@@ -4,12 +4,12 @@ import threading
 
 # Configuración de la troncal SIP de Telnyx
 TELNYX_SIP_SERVER = "sip.telnyx.com"
-TELNYX_USERNAME = "daniel30932"
-TELNYX_PASSWORD = "Od7UvuML"
+TELNYX_USERNAME = "myuser"
+TELNYX_PASSWORD = "mypassw"
 
 # Números para las llamadas
-CALLER = "12058759185"
-RECIPIENT = "12319362615"
+CALLER = "1205"
+RECIPIENT = "123"
 
 # Ruta del archivo de audio
 AUDIO_FILE = "assets/Days-of-the-week.wav"
